@@ -1,0 +1,4 @@
+Problem statement: Engineering students and professors in Artificial Intelligence-related disciplines rely on multiple heterogeneous study resources (PDFs, Word documents, and image-based diagrams) while preparing
+for viva exams, end-semester exams, interviews, or lectures. The abundance of material creates cognitive overload and anxiety, especially when users are unsure which source to trust or prioritize. Existing LLM-based tools often 
+hallucinate, oversimplify, or introduce external information not present in the provided resources. The desired outcome is a system that accepts user-provided study materials and generates summaries strictly
+grounded in those materials, using user-controlled complexity and wording preferences, while minimizing hallucinations and maximizing factual fidelity.
