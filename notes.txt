@@ -1,0 +1,93 @@
+V1 model
+functioning: 
+user uploads a research paper -> grobid extracts the metadata & saves in SQlite 
+user queries specifically about metadata -> NLP to SQL generation -> SQL querying on sqlite db -> result generation -> llm creates final response.
+
+tech stack:
+# Web Framework
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+# Frontend
+streamlit==1.28.1
+# PDF Processing
+grobid-client-python==0.1.3
+requests==2.31.0
+# Database
+sqlalchemy==2.0.23
+sqlite-utils==3.36
+# Configuration & Validation
+python-dotenv==1.0.0
+pydantic==2.5.0
+# File Operations
+aiofiles==23.2.1
+# NLP & LLM
+ollama==0.1.3
+nltk==3.8.1
+
+nlp to sql:
+Prompt with:
+DB schema
+Allowed tables
+Instructions: "Return ONLY valid SQL."
+Restrict to SELECT queries only
+Reject DDL / DML statements
+Validate SQL before execution
+
+app -> backend server
+
+Server
+PORT=8000
+HOST=0.0.0.0
+Important detail:
+0.0.0.0 → accepts requests from any network interface
+If you use 127.0.0.1, only local machine can access it
+
+                research_qa_v1/  
+                 ├── app/ # Core application package
+                 │ 
+                 │ ├── main.py # Entry point → creates FastAPI app, includes routers, initializes DB 
+                 │ ├── config/ 
+                 │ │ ├── __init__.py 
+                 │ │ └── settings.py # Loads environment variables (DB path, GROBID URL, LLM key) 
+                 │ ├── routers/ # API layer → handles HTTP requests only 
+                 │ │ ├── __init__.py 
+                 │ │ ├── upload_router.py # POST /upload → receives PDF → calls ingestion_service 
+                 │ │ └── query_router.py # POST /query → receives question → triggers NLP→SQL→LLM flow 
+                 │ ├── services/ # Business logic layer (actual brain of system) 
+                 │ │ ├── __init__.py 
+                 │ │ ├── ingestion_service.py # Orchestrates: PDF → GROBID → XML parsing → DB insertion 
+                 │ │ ├── grobid_service.py # Sends PDF to GROBID server, returns raw XML response 
+                 │ │ ├── metadata_service.py # Inserts extracted metadata (papers, authors) into SQLite 
+                 │ │ ├── sql_generation_service.py # Uses LLM to convert natural language → SQL query 
+                 │ │ ├── sql_execution_service.py # Validates & executes SQL safely on SQLite 
+                 │ │ └── llm_response_service.py # Converts SQL result rows → human-readable answer 
+                 │ ├── db/ # Database layer (only place touching SQLite directly) 
+                 │ │ ├── __init__.py 
+                 │ │ ├── sqlite_manager.py # Handles DB connection, query execution, transactions 
+                 │ │ └── schema.sql # SQL schema defining tables (papers, authors, relations) 
+                 │ ├── models/ # Data validation layer (Pydantic models) 
+                 │ │ ├── __init__.py 
+                 │ │ ├── request_models.py # Defines request structures (e.g., QueryRequest) 
+                 │ │ └── response_models.py # Defines response structures (e.g., QueryResponse) 
+                 │ ├── utils/ # Helper utilities (stateless support functions) 
+                 │ │ ├── __init__.py 
+                 │ │ ├── xml_parser.py # Extracts title, abstract, year, authors from GROBID XML 
+                 │ │ ├── sql_validator.py # Ensures SQL is SELECT-only, blocks destructive queries 
+                 │ │ └── logger.py # Centralized logging configuration 
+                 │ └── prompts/ # LLM prompt templates (kept outside code for flexibility) 
+                 │ │ ├── sql_prompt.txt # Template for generating SQL from natural language 
+                 │ │ └── answer_prompt.txt # Template for generating final human-readable response 
+                 ├── data/ # Runtime data storage (not core logic) 
+                 │ ├── uploads/ # Stores uploaded PDF files 
+                 │ └── research.db # SQLite database file 
+                 ├── tests/ # Unit & integration tests 
+                 │ ├── test_ingestion.py # Tests metadata extraction & DB insertion 
+                 │ ├── test_sql_generation.py # Tests SQL generation safety & format 
+                 │ └── test_query_flow.py # End-to-end query test (upload → query → answer) 
+                 ├── frontend/
+                 │ └── streamlit_app.py # E
+                 ├── requirements.txt # Python dependencies 
+                 ├── .env # Environment variables (API keys, DB path, etc.) 
+                 ├── .gitignore # Prevents committing DB, uploads, secrets 
+                 └── README.md # Project overview, setup instructions, architecture diagram
