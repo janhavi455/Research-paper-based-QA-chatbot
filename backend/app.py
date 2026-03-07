@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import shutil
 from typing import List
+import grobid_processor 
 
 UPLOAD_FOLDER = Path(__file__).parent / "data" / "uploaded_pdf"
 
@@ -18,8 +19,6 @@ app.add_middleware(
 @app.post("/upload_pdfs")
 async def upload_pdfs(pdfs: List[UploadFile] = File(...)):
     try:
-
-
         saved_files = []
         UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
@@ -38,3 +37,19 @@ async def upload_pdfs(pdfs: List[UploadFile] = File(...)):
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@app.get("/process_pdfs_grobid")
+async def process_pdfs_grobid():
+    try:
+        print("Starting GROBID processing...")
+
+        metadata_results = grobid_processor.process_pdfs()
+
+        print(f"GROBID processing complete. Processed {len(metadata_results)} files")
+
+        return {
+            "processed_count": len(metadata_results),
+            "metadata": metadata_results
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))  
