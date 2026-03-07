@@ -3,6 +3,7 @@ from lxml import etree
 import requests
 import shutil
 from typing import List, Dict, Any
+from db import insert_metadata_in_db
 
 GROBID_URL = "http://localhost:8070/api/processHeaderDocument"
 UPLOAD_FOLDER = Path(__file__).parent / "data" / "uploaded_pdf"
@@ -83,6 +84,7 @@ def process_single_pdf(pdf_path: Path) -> Dict[str, Any] | None:
     except Exception as e:
         print(f"Unexpected error processing {pdf_path.name}: {e}")
         return None
+    
 def process_pdfs() -> List[Dict[str, Any]]:
     pdf_files = list(UPLOAD_FOLDER.glob("*.pdf"))
     print(f"Found {len(pdf_files)} PDF(s) to process")
@@ -91,6 +93,11 @@ def process_pdfs() -> List[Dict[str, Any]]:
         metadata = process_single_pdf(pdf_path)
         if metadata:
             results.append(metadata)
+            inserted_in_db= insert_metadata_in_db(pdf_path.name, metadata)
+            if inserted_in_db:
+                print("successfully inserted metadata in sqlite")
+            else:
+                print("metadata insertion in sqlite not successfull.")
     print(f"\nProcessing complete. Successfully processed {len(results)} out of {len(pdf_files)} files")
     return results         
 

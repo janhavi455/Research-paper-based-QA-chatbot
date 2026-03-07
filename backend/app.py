@@ -4,9 +4,11 @@ from pathlib import Path
 import shutil
 from typing import List
 import grobid_processor 
+from db import init_db, insert_metadata_in_db
 
 UPLOAD_FOLDER = Path(__file__).parent / "data" / "uploaded_pdf"
 
+init_db()
 app = FastAPI(title="PDF Metadata API")
 
 # Allow CORS for Streamlit frontend
